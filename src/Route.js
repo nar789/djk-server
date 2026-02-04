@@ -48,14 +48,29 @@ export class Route {
       const score = req.body.score;
       const line = req.body.line;
       console.log("/update/user-score ? " + id + " / " + score + " / " + line);
-      const qry = `update user set score=${score}, line=${line} where id='${id}'`;
-      this.connection.query(qry, (err, row) => {
-        if (err) {
-          res.send("fail");
-          return;
-        }
-        res.send("success");
-      });
+      this.connection.query(
+        `select score from user where id='${id}'`,
+        (err, row) => {
+          if (err) {
+            res.send("fail");
+            return;
+          }
+          if (row && row.length > 0 && row[0]["score"] < score) {
+            this.connection.query(
+              `update user set score=${score}, line=${line} where id='${id}'`,
+              (err2, row2) => {
+                if (err2) {
+                  res.send("fail");
+                  return;
+                }
+                res.send("success");
+              },
+            );
+          } else {
+            res.send("success");
+          }
+        },
+      );
     });
 
     app.post("/fetch/users-ranking", (req, res) => {
